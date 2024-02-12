@@ -1,0 +1,50 @@
+# Xcode
+.DS_Store
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+
+# Swift Package Manager
+.Package.resolved
+.build/
+
+# CocoaPods
+Pods/
+*.xcworkspace
+!xcshareddata/
+!xcuserdata/
+
+# Carthage
+Carthage/Build/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
+# Swift
+*.hmap
+*.dSYM.zip
+*.dSYM/
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Swift Package Manager
+Package.pins
+Package.resolved
+
+# AppCode
+.idea/
+
+# Mint
+Mintfile
