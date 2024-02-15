@@ -48,3 +48,5 @@ Package.resolved
 
 # Mint
 Mintfile
+
+*.ipa

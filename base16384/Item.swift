@@ -6,9 +6,9 @@
 //
 
 import Foundation
-import SwiftData
+//import SwiftData
 
-@Model
+//@Model
 final class Item {
     var timestamp: Date
     
