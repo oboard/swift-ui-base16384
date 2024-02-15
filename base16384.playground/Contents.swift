@@ -1,6 +1,6 @@
 import Foundation
 
-func align(input: [UInt8], output: inout [UInt16], sWidth: Int, tWidth: Int, sOffset: Int, tOffset: Int) {
+func align<T: UnsignedInteger, U: UnsignedInteger>(input: [T], output: inout [U], sWidth: Int, tWidth: Int, sOffset: Int, tOffset: Int) {
     var offset = 0
     var rest = 0
     var i = 0, j = 0
@@ -12,7 +12,11 @@ func align(input: [UInt8], output: inout [UInt16], sWidth: Int, tWidth: Int, sOf
         
         while offset >= tWidth {
             offset -= tWidth
-            output[j] = UInt16(rest + (char >> offset) + tOffset)
+            var out = rest + (char >> offset) + tOffset;
+            if (out < 0) {
+                out = 0
+            }
+            output[j] = U(out)
             j += 1
             
             if j == output.count {
@@ -26,7 +30,7 @@ func align(input: [UInt8], output: inout [UInt16], sWidth: Int, tWidth: Int, sOf
     }
     
     if offset != 0 {
-        output[j] = UInt16(rest + tOffset)
+        output[j] = U(rest + tOffset)
         j += 1;
     }
 }
@@ -46,39 +50,36 @@ func encode(input: [UInt8]) -> [UInt16] {
 func toUint16Array(source: String) -> [UInt16] {
     return source.utf16.map { UInt16($0) }
 }
-func convertUInt16ArrayToUInt8Array(_ input: [UInt16]) -> [UInt8] {
-    var output: [UInt8] = []
 
-    for value in input {
-        // Extract high and low bytes
-        let highByte = UInt8((value & 0xFF00) >> 8)
-        let lowByte = UInt8(value & 0x00FF)
-
-        // Append bytes to the output array
-        output.append(highByte)
-        output.append(lowByte)
+func performSafeSubtraction(_ a: Int, _ b: Int) -> Int? {
+    do {
+        let result = try a.subtractingReportingOverflow(b)
+        if result.overflow {
+            return nil
+        }
+        return result.partialValue
+    } catch {
+        return nil
     }
-
-    return output
 }
 
-func decode(input: [UInt16]) -> [UInt8] {
+func decode(input: [UInt16]) -> [UInt8]  {
     let length = input.count - 1
-    let input8 = convertUInt16ArrayToUInt8Array(input)
-    var residue = Int(input[length] - 0x3d00)
-    if (residue == 0) {
+    if (length < 0) {
+        return [UInt8]();
+    }
+    var residue = Int(performSafeSubtraction(Int(input[length]), 0x3d00) ?? 7)
+    
+    if (residue <= 0) {
         residue = 7
     }
-    var output = [UInt16](repeating: 0, count: (length - 1) / 4 * 7 + residue)
-    align(input: input8, output: &output, sWidth: 14, tWidth: 8, sOffset: 0x4e00, tOffset: 0)
-//    
-    return convertUInt16ArrayToUInt8Array(output)
+    var output = [UInt16](repeating: 0, count: Int(floor((length - 1) / 4)) * 7 + residue)
+    align(input: input, output: &output, sWidth: 14, tWidth: 8, sOffset: 0x4e00, tOffset: 0)
+    return output.map { UInt8($0 % 256) }
 }
 
-
 func toSource8(input: [UInt8]) -> String {
-    let characters = input.map { Character(UnicodeScalar($0)) }
-    return String(characters)
+    return String(data: Data(input), encoding: .utf8) ?? ""
 }
 
 func toSource(input: [UInt16]) -> String {
@@ -86,11 +87,11 @@ func toSource(input: [UInt16]) -> String {
     return String(characters)
 }
 
-// Test
-let sourceString = "你"
-let encodedArray = encode(input: toUint8Array(source: sourceString))
-let decodedArray = decode(input: encodedArray)
 
-print("Source String: \(sourceString)")
-print("Encoded Array: \(encodedArray)")
+// Test
+//let sourceString = "早上好"
+//let encodedArray = encode(input: toUint8Array(source: sourceString))
+let encodedStr = "螥袞惢壥睯帀㴂"
+let decodedArray = decode(input: toUint16Array(source: encodedStr))
+
 print("Decoded Array: \(decodedArray)")

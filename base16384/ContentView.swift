@@ -9,83 +9,93 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-//    @Environment(\.modelContext) private var modelContext
-//    @Query private var items: [Item]
+    //    @Environment(\.modelContext) private var modelContext
+    //    @Query private var items: [Item]
     
     @State private var textInput: String = "Example"
-    @State private var textOutput: String = ""
+    @State private var textOutput: String = "彞吖菁穥㴀"
+    @State private var selectedTab = 0
     
-    @State private var selectedSegment = 0
-    let segments = ["Encode", "Decode"]
+    var content: some View {
+        VStack {
+            TextEditor(text: $textInput)
+                .onChange(of: textInput) { oldValue, newValue in
+                    submit()
+                }
+                .padding()
+                .scrollContentBackground(.hidden)
+                .background(.ultraThickMaterial)
+                .cornerRadius(10)
+            
+            TextEditor(text: $textOutput)
+                .padding()
+                .scrollContentBackground(.hidden)
+                .background(.ultraThickMaterial)
+                .cornerRadius(10)
+            
+        }.padding()
+    }
     
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                Image("Wallpaper")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .edgesIgnoringSafeArea(.all)
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .opacity(0.5)
+#if os(iOS)
+        NavigationView {
+            TabView(selection: $selectedTab) {
+                content
+                    .tabItem {
+                        Image(systemName: "lock")
+                        Text("Encode")
+                    }.tag(0)
                 
-                VStack {
-                    
-                    Picker("",selection: $selectedSegment) {
-                           ForEach(0..<segments.count) { index in
-                               Text(segments[index])
-                           }
-                       }
-                    .pickerStyle(.segmented)
-                       .padding()
-                                   
-                    
-                    ZStack(alignment: .topLeading) {
-                        
-                        TextEditor(text: $textInput)
-                            .onChange(of: textInput) { oldValue, newValue in
-                                if (selectedSegment == 0){
-                                    textOutput = toSource(input: encode(input: toUint8Array(source: textInput)))
-                                } else {
-                                    do {
-                                        textOutput = toSource8(input: try decode(input: toUint16Array(source: textInput)))
-                                    } catch {
-                                        textOutput = "错误"
-                                    }
-                                }
-                            }
-                            .padding()
-                            .scrollContentBackground(.hidden)
-                            .background(.thinMaterial)
-                            .cornerRadius(10)
-                    }
-                    
-                    
-                    Text("base16384").italic().monospaced()
-                        .foregroundStyle(LinearGradient(
-                            gradient: Gradient(colors: [Color.green, Color.blue]),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )).shadow(radius: /*@START_MENU_TOKEN@*/10/*@END_MENU_TOKEN@*/)
-                    
-                    ZStack(alignment: .topLeading) {
-                        
-                        TextEditor(text: $textOutput)
-                            .padding()
-                            .scrollContentBackground(.hidden)
-                            .background(.thinMaterial)
-                            .cornerRadius(10)
-                    }
-                    
-                    
-                }.padding()
-                
+                content
+                    .tabItem {
+                        Image(systemName: "key")
+                        Text("Decode")
+                    }.tag(1)
             }
+            .onChange(of: selectedTab) { oldTab, newTab in
+                if (oldTab != newTab) {
+                    swap(&textInput, &textOutput)
+                }
+                submit()
+            }.navigationTitle("base16384")
         }
+#endif
+#if os(macOS)
+        TabView(selection: $selectedTab) {
+            content
+                .tabItem {
+                    Image(systemName: "lock")
+                    Text("Encode")
+                }.tag(0)
+            
+            content
+                .tabItem {
+                    Image(systemName: "key")
+                    Text("Decode")
+                }.tag(1)
+        }
+        .onChange(of: selectedTab) { oldTab, newTab in
+            if (oldTab != newTab) {
+                swap(&textInput, &textOutput)
+            }
+            submit()
+        }
+        .frame(minWidth: 400, minHeight: 600)
+        .padding()
+#endif
         //#if os(iOS)
         //#endif
         //detail: {
         //            Text("Select an item")
         //        }
+    }
+    
+    private func submit() {
+        if (selectedTab == 0){
+            textOutput = toSource(input: encode(input: toUint8Array(source: textInput)))
+        } else {
+            textOutput = toSource8(input: decode(input: toUint16Array(source: textInput)))
+        }
     }
     
     private func clearText() {
@@ -96,13 +106,17 @@ struct ContentView: View {
         }
     }
     
-//    private func deleteItems(offsets: IndexSet) {
-//        withAnimation {
-//            for index in offsets {
-//                modelContext.delete(items[index])
-//            }
-//        }
-//    }
+    
+    init() {
+        submit()
+    }
+    //    private func deleteItems(offsets: IndexSet) {
+    //        withAnimation {
+    //            for index in offsets {
+    //                modelContext.delete(items[index])
+    //            }
+    //        }
+    //    }
 }
 
 #Preview {
