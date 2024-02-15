@@ -52,15 +52,11 @@ func toUint16Array(source: String) -> [UInt16] {
 }
 
 func performSafeSubtraction(_ a: Int, _ b: Int) -> Int? {
-    do {
-        let result = try a.subtractingReportingOverflow(b)
-        if result.overflow {
-            return nil
-        }
-        return result.partialValue
-    } catch {
+    let result =  a.subtractingReportingOverflow(b)
+    if result.overflow {
         return nil
     }
+    return result.partialValue
 }
 
 func decode(input: [UInt16]) -> [UInt8]  {
@@ -73,7 +69,7 @@ func decode(input: [UInt16]) -> [UInt8]  {
     if (residue <= 0) {
         residue = 7
     }
-    var output = [UInt16](repeating: 0, count: Int(floor((length - 1) / 4)) * 7 + residue)
+    var output = [UInt16](repeating: 0, count: Int(floor(Double(length - 1) / 4)) * 7 + residue)
     align(input: input, output: &output, sWidth: 14, tWidth: 8, sOffset: 0x4e00, tOffset: 0)
     return output.map { UInt8($0 % 256) }
 }
@@ -86,12 +82,11 @@ func toSource(input: [UInt16]) -> String {
     let characters = input.map { Character(UnicodeScalar($0)!) }
     return String(characters)
 }
-
-
 // Test
-//let sourceString = "早上好"
-//let encodedArray = encode(input: toUint8Array(source: sourceString))
-let encodedStr = "螥袞惢壥睯帀㴂"
-let decodedArray = decode(input: toUint16Array(source: encodedStr))
+let sourceString = "你"
+let encodedArray = encode(input: toUint8Array(source: sourceString))
+let decodedArray = decode(input: encodedArray)
 
+print("Source String: \(sourceString)")
+print("Encoded Array: \(encodedArray)")
 print("Decoded Array: \(decodedArray)")
